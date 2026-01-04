@@ -15,8 +15,8 @@ include(${KVASIR_ROOT}/cmake/kvasir.cmake)
 
 project(
     "rp2040_template"
-    VERSION 0.1.0
-    DESCRIPTION "RP240 firmware template using Kvasir SDK")
+    VERSION 0.1.1
+    DESCRIPTION "RP2040 firmware template using Kvasir SDK")
 
 include(${KVASIR_ROOT}/cmake/util.cmake)
 
