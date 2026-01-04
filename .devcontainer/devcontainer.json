@@ -1,0 +1,218 @@
+{
+  "name": "RP2040 Development",
+  "image": "docker.io/kvasirio/rp2040:latest",
+  "workspaceFolder": "/workspace/project",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace/project,type=bind",
+  "initializeCommand": "${localWorkspaceFolder}/.devcontainer/init-env && ${localWorkspaceFolder}/.devcontainer/start-jlink",
+  "runArgs": [
+    "--privileged",
+    "--network=host",
+    "--env-file=${localWorkspaceFolder}/.devcontainer/.env"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "llvm-vs-code-extensions.vscode-clangd",
+        "ms-vscode.cmake-tools",
+        "marus25.cortex-debug"
+      ],
+      "settings": {
+        "clangd.arguments": [
+          "--compile-commands-dir=docker_build",
+          "--header-insertion=never",
+          "--background-index"
+        ],
+        "extensions.ignoreRecommendations": true,
+        "extensions.showRecommendationsOnlyOnDemand": false,
+        "cmake.automaticReconfigure": false,
+        "cmake.autoSelectActiveFolder": false,
+        "cmake.buildBeforeRun": false,
+        "cmake.configureOnEdit": false,
+        "cmake.configureOnOpen": false,
+        "git.openRepositoryInParentFolders": "never",
+        "tasks": {
+          "version": "2.0.0",
+          "tasks": [
+            {
+              "label": "Build",
+              "type": "shell",
+              "command": "cmake",
+              "args": [
+                "--build",
+                "${workspaceFolder}/docker_build",
+                "--target",
+                "${input:buildTarget}",
+                "--parallel"
+              ],
+              "group": {
+                "kind": "build",
+                "isDefault": true
+              }
+            },
+            {
+              "label": "Flash",
+              "type": "shell",
+              "command": "cmake",
+              "args": [
+                "--build",
+                "${workspaceFolder}/docker_build",
+                "--target",
+                "${input:flashTarget}",
+                "--parallel"
+              ],
+              "group": "build"
+            },
+            {
+              "label": "Log",
+              "type": "shell",
+              "command": "cmake",
+              "args": [
+                "--build",
+                "${workspaceFolder}/docker_build",
+                "--target",
+                "${input:logTarget}",
+                "--parallel"
+              ],
+              "group": "build"
+            }
+          ],
+          "inputs": [
+            {
+              "id": "buildTarget",
+              "type": "pickString",
+              "description": "Select build configuration",
+              "options": [
+                {
+                  "label": "Debug",
+                  "value": "debug"
+                },
+                {
+                  "label": "Release (with logging)",
+                  "value": "release_log"
+                },
+                {
+                  "label": "Release (no logging)",
+                  "value": "release"
+                },
+                {
+                  "label": "Sanitize",
+                  "value": "sanitize"
+                }
+              ],
+              "default": "release_log"
+            },
+            {
+              "id": "flashTarget",
+              "type": "pickString",
+              "description": "Select flash configuration",
+              "options": [
+                {
+                  "label": "Debug",
+                  "value": "flash_debug"
+                },
+                {
+                  "label": "Release (with logging)",
+                  "value": "flash_release_log"
+                },
+                {
+                  "label": "Release (no logging)",
+                  "value": "flash_release"
+                },
+                {
+                  "label": "Sanitize",
+                  "value": "flash_sanitize"
+                }
+              ],
+              "default": "flash_release_log"
+            },
+            {
+              "id": "logTarget",
+              "type": "pickString",
+              "description": "Select log configuration",
+              "options": [
+                {
+                  "label": "Debug",
+                  "value": "log_debug"
+                },
+                {
+                  "label": "Release",
+                  "value": "log_release_log"
+                },
+                {
+                  "label": "Sanitize",
+                  "value": "log_sanitize"
+                }
+              ],
+              "default": "log_release_log"
+            }
+          ]
+        },
+        "launch": {
+          "version": "0.2.0",
+          "configurations": [
+            {
+              "name": "Flash and Debug",
+              "type": "cortex-debug",
+              "request": "attach",
+              "cwd": "${workspaceFolder}",
+              "executable": "${workspaceFolder}/docker_build/${input:debugBinary}.elf",
+              "servertype": "jlink",
+              "ipAddress": "${env:JLINK_IP}",
+              "device": "RP2040_M0_0",
+              "interface": "swd",
+              "svdFile": "/opt/chip/chip.svd",
+              "preLaunchTask": "Flash",
+              "postAttachCommands": [
+                "continue"
+              ]
+            },
+            {
+              "name": "Attach Only",
+              "type": "cortex-debug",
+              "request": "attach",
+              "cwd": "${workspaceFolder}",
+              "executable": "${workspaceFolder}/docker_build/${input:debugBinary}.elf",
+              "servertype": "jlink",
+              "ipAddress": "${env:JLINK_IP}",
+              "device": "RP2040_M0_0",
+              "interface": "swd",
+              "svdFile": "/opt/chip/chip.svd",
+              "postAttachCommands": [
+                "continue"
+              ]
+            }
+          ],
+          "inputs": [
+            {
+              "id": "debugBinary",
+              "type": "pickString",
+              "description": "Select binary to debug",
+              "options": [
+                {
+                  "label": "Debug",
+                  "value": "debug"
+                },
+                {
+                  "label": "Release (with logging)",
+                  "value": "release_log"
+                },
+                {
+                  "label": "Release (no logging)",
+                  "value": "release"
+                },
+                {
+                  "label": "Sanitize",
+                  "value": "sanitize"
+                }
+              ],
+              "default": "release_log"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "onCreateCommand": "git config --global --add safe.directory /workspace/project && ./scripts/configure.sh docker_build -DJLINK_IP=${JLINK_IP}",
+  "postStartCommand": "./scripts/build.sh docker_build -DJLINK_IP=${JLINK_IP}",
+  "overrideCommand": true
+}

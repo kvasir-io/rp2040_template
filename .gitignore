@@ -1,0 +1,8 @@
+build
+build_*
+docker_build
+compile_commands.json
+.clangd
+.cache
+.devcontainer/.env
+.devcontainer/jlink.conf
