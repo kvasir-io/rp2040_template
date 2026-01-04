@@ -10,7 +10,7 @@ jobs:
   build_firmware:
     runs-on: ubuntu-latest
     container:
-      image: docker.io/kvasirio/rp2350:latest
+      image: docker.io/kvasirio/rp2040:latest
 
     steps:
       - name: Checkout code
